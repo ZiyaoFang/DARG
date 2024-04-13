@@ -147,7 +147,7 @@ __global__ void kernel(float start_ra, float start_dec, float step, float RAJ, f
     __syncthreads();
 } 
 
-__global__ void fast_search(float start_ra, float start_dec, float step, float RAJ, float DECJ, float p0, double *mjd, float *ssb, double *resids, float *errors_inverse, float *result)
+__global__ void quick_search(float start_ra, float start_dec, float step, float RAJ, float DECJ, float p0, double *mjd, float *ssb, double *resids, float *errors_inverse, float *result)
 {
     int thread_count = blockIdx.x * blockDim.x + threadIdx.x;
     int count = blockIdx.y * blockDim.y + threadIdx.y;
