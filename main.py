@@ -29,17 +29,17 @@ import sys
 # __all__ = ["main"]
 def reduce_toa_number(toas,number_per_observation,outfile=None):
     mjd = toas.get_mjds()
-    integer_parts = mjd.value.astype(int)  # 取整数部分
-    unique_integers = np.unique(integer_parts)  # 获取唯一的整数部分值
+    integer_parts = mjd.value.astype(int)
+    unique_integers = np.unique(integer_parts)
 
     reduced_toas = []
     observation = []
     indices = []
     for integer in unique_integers:
-        day_indices = np.where(integer_parts == integer)[0]  # 找到与当前整数部分相同的索引
-        num_group = mjd[day_indices]  # 根据索引获取对应的原始数值
-        sorted_indices = day_indices[np.argsort(num_group)][0:number_per_observation]  # 对这些数值排序并取前n个的索引
-        # num_group_sorted = num_group[np.argsort(num_group)][0:number_per_observation]  # 对这些数值排序并取前n个
+        day_indices = np.where(integer_parts == integer)[0]
+        num_group = mjd[day_indices]
+        sorted_indices = day_indices[np.argsort(num_group)][0:number_per_observation]
+        # num_group_sorted = num_group[np.argsort(num_group)][0:number_per_observation]
         observation.append(toas[sorted_indices])
         indices.append(sorted_indices)
     
