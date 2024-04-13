@@ -146,3 +146,70 @@ __global__ void kernel(float start_ra, float start_dec, float step, float RAJ, f
     
     __syncthreads();
 } 
+
+__global__ void fast_search(float start_ra, float start_dec, float step, float RAJ, float DECJ, float p0, double *mjd, float *ssb, double *resids, float *errors_inverse, float *result)
+{
+    int thread_count = blockIdx.x * blockDim.x + threadIdx.x;
+    int count = blockIdx.y * blockDim.y + threadIdx.y;
+
+    float x = (-1 * num_range * 0.5 + thread_count + start_ra) * step * deg_rad;     
+    float y = (-1 * num_range * 0.5 + count + start_dec) * step * deg_rad;          
+
+    float RA = RAJ * deg_rad;
+    float DEC = DECJ * deg_rad;
+
+    double mjd_value;
+    double new_resids_linear;
+    double mean_x=0.0; 
+    double mean_y=0.0;
+    double mean_resids=0.0;
+    double chi2 = 0.0;
+                            
+    float dx = -cos(RA)*cos(DEC)*(x*x+y*y)*0.5 - cos(RA)*sin(DEC)*y - sin(RA)*cos(DEC)*x + sin(DEC)*sin(RA)*x*y;
+    float dy = -sin(RA)*cos(DEC)*(x*x+y*y)*0.5 - sin(DEC)*sin(RA)*y + cos(RA)*cos(DEC)*x - cos(RA)*sin(DEC)*x*y;
+    float dz = -sin(DEC)*y*y*0.5 + cos(DEC)*y;
+    
+    double delt_resids;
+    double new_resids_bk;
+    double linear_resids,destination;
+    
+    double w1=0.0, w2=0.0;
+    double m1=0.0, m2=0.0;
+    float k,b; 
+
+    for(int kk=0; kk<num_toa; kk++)
+    {
+    mjd_value = mjd[kk];
+    delt_resids = dx * ssb[kk*3] + dy * ssb[kk*3+1] + dz * ssb[kk*3+2];
+    new_resids_bk = resids[kk] + delt_resids*km_s;
+    mean_resids += new_resids_bk;
+    }
+    mean_resids = mean_resids / num_toa;
+    
+    for(int pp=0; pp<num_toa; pp++)
+    {
+    mjd_value = mjd[pp];
+    delt_resids = dx * ssb[pp*3] + dy * ssb[pp*3+1] + dz * ssb[pp*3+2];
+    new_resids_bk = resids[pp] + delt_resids*km_s;
+    destination = mjd_value * k + b;
+    m1 += (mjd_value-mean_mjd)*(new_resids_bk-mean_resids);
+    m2 += pow((mjd_value-mean_mjd),2);
+    }
+    k = m1 / m2;
+    b = k * mean_mjd - mean_resids;
+    
+    for(int tt=0; tt<num_toa; tt++)
+    {
+    mjd_value = mjd[tt];
+    delt_resids = dx * ssb[tt*3] + dy * ssb[tt*3+1] + dz * ssb[tt*3+2];
+    new_resids_bk = resids[tt] + delt_resids*km_s;
+    destination = k * mjd_value + b;
+    chi2 += pow((new_resids_bk-destination)*errors_inverse[tt],2);
+    }
+        
+    result[(thread_count*num_range+count)*3] = chi2 / num_toa;
+    result[(thread_count*num_range+count)*3+1] = (-1 * num_range * 0.5 + thread_count + start_ra) * step + RAJ;
+    result[(thread_count*num_range+count)*3+2] =  (-1 * num_range * 0.5 + count + start_dec) * step + DECJ;
+    
+    __syncthreads();
+}
