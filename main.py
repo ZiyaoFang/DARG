@@ -151,7 +151,7 @@ def main():
     # parser.add_argument('arg', help='Description of argument')
     parser.add_argument("parfile", help="par file to read model from")
     parser.add_argument("timfile", help="tim file to read toas from")
-    parser.add_argument('-c', '--ncpus', type=int, help='Number of CPU threads, default = 1',default=1)
+    # parser.add_argument('-c', '--ncpus', type=int, help='Number of CPU threads, default = 1',default=1)
     parser.add_argument('-r', '--range', type=float, help='Range of position searching, default = 3 arcminites',default=0.02)
     parser.add_argument('-s', '--step', type=float, help='Precision of position searching, default = 1.0 milliarcsec',default=1.e-3)
     parser.add_argument('-t','--threshold', type=float, help='Threshold of chisquar utoff, default = 2.0',default=2.0)
