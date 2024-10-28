@@ -1,2 +1,2 @@
 # DARG
-A GPU algorithm for solving the position of new pulsars
+A GPU algorithm for solving the positionss of new pulsars
